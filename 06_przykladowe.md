@@ -498,3 +498,160 @@ Schemat jest taki:
 5. `ListView` pokazuje liste hormonow i gruczolow.
 
 To jest juz gotowy, pelny przyklad podobny do tego, co robiles w `lek15_ksiazka` i `lek16_oceny`.
+
+## 6. Wersja prostsza bez `item_hormon.xml` i bez wlasnego adaptera
+
+Mozesz tez zrobic ten sam `ListView` prosciej:
+
+- bez pliku `item_hormon.xml`,
+- bez klasy `HormoneAdapter`,
+- z uzyciem `toString()`.
+
+To dobre rozwiazanie, gdy chcesz zrobic szybciej prostsze zadanie.
+
+### 6.1 Dodatkowa klasa `Hormone.java`
+
+W tej wersji zamiast `List<String>` lepiej uzyc normalnej klasy.
+
+```java
+package com.example.hormony;
+
+public class Hormone {
+    private String gruczol;
+    private String hormon;
+
+    public Hormone(String gruczol, String hormon) {
+        this.gruczol = gruczol;
+        this.hormon = hormon;
+    }
+
+    public String getGruczol() {
+        return gruczol;
+    }
+
+    public String getHormon() {
+        return hormon;
+    }
+
+    @Override
+    public String toString() {
+        return gruczol + " -> " + hormon;
+    }
+}
+```
+
+Najwazniejsze tutaj jest `toString()`.
+
+To wlasnie ta metoda sprawia, ze `ListView` umie pokazac obiekt jako zwykly tekst.
+
+### 6.2 Jak zmienia sie `MainActivity`
+
+Zamiast:
+
+```java
+private List<String> listaHormonow = new ArrayList<>();
+private HormoneAdapter adapter;
+```
+
+masz:
+
+```java
+private List<Hormone> listaHormonow = new ArrayList<>();
+private ArrayAdapter<Hormone> adapter;
+```
+
+### 6.3 Ustawienie listy bez wlasnego adaptera
+
+Zamiast poprzedniej metody `ustawListe()` mozesz zrobic tak:
+
+```java
+private void ustawListe() {
+    listaHormonow.add(new Hormone("Trzustka", "Insulina"));
+    listaHormonow.add(new Hormone("Tarczyca", "Tyroksyna"));
+    listaHormonow.add(new Hormone("Szyszynka", "Melatonina"));
+    listaHormonow.add(new Hormone("Jajniki", "Estrogen"));
+    listaHormonow.add(new Hormone("Nadnercza", "Adrenalina"));
+
+    adapter = new ArrayAdapter<>(
+            this,
+            android.R.layout.simple_list_item_1,
+            listaHormonow
+    );
+
+    listHormony.setAdapter(adapter);
+}
+```
+
+Tutaj Android sam bierze wynik `toString()` i pokazuje go w jednym `TextView`.
+
+### 6.4 Klikniecie elementu w tej wersji
+
+```java
+listHormony.setOnItemClickListener((parent, view, position, id) -> {
+    Hormone element = listaHormonow.get(position);
+
+    etHormon.setText(element.getHormon());
+    spinnerGruczol.setSelection(znajdzPozycjeGruczolu(element.getGruczol()));
+
+    Toast.makeText(this, "Wybrano: " + element.toString(), Toast.LENGTH_SHORT).show();
+});
+```
+
+### 6.5 Long click w tej wersji
+
+```java
+listHormony.setOnItemLongClickListener((parent, view, position, id) -> {
+    Hormone usuniety = listaHormonow.remove(position);
+    adapter.notifyDataSetChanged();
+    Toast.makeText(this, "Usunieto: " + usuniety.toString(), Toast.LENGTH_SHORT).show();
+    return true;
+});
+```
+
+### 6.6 Jak wtedy wyglada element listy
+
+W wersji z `item_hormon.xml` jeden rekord moze miec dwa osobne `TextView`:
+
+- jeden na gruczol,
+- drugi na hormon.
+
+W wersji z `toString()` rekord jest prostszy i wyglada mniej wiecej tak:
+
+```txt
+Trzustka -> Insulina
+Tarczyca -> Tyroksyna
+Szyszynka -> Melatonina
+```
+
+Czyli:
+
+- mniej kodu,
+- mniej plikow,
+- prostsza lista,
+- ale tez mniejsze mozliwosci wygladu.
+
+### 6.7 Kiedy wybrac ktora wersje
+
+Wersja z `item_hormon.xml` i `HormoneAdapter`:
+
+- lepsza, gdy chcesz ladniejszy wyglad,
+- lepsza, gdy rekord ma kilka pol,
+- bardziej podobna do prawdziwej aplikacji.
+
+Wersja z `toString()`:
+
+- lepsza do szybkiego zadania,
+- dobra na prostszy sprawdzian,
+- dobra, gdy wystarczy jeden napis w wierszu.
+
+## 7. Co zapamietac z tego przykladu
+
+Masz teraz dwie poprawne wersje listy:
+
+1. wersja pelna:
+   `item_hormon.xml` + `HormoneAdapter.java`
+2. wersja prostsza:
+   `toString()` + `ArrayAdapter`
+
+Obie sa poprawne.  
+Po prostu wybierasz te, ktora lepiej pasuje do zadania.
