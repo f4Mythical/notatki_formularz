@@ -644,7 +644,164 @@ Wersja z `toString()`:
 - dobra na prostszy sprawdzian,
 - dobra, gdy wystarczy jeden napis w wierszu.
 
-## 7. Co zapamietac z tego przykladu
+## 7. Wersja posrednia: jest adapter, ale nie ma `item.xml`
+
+To jest bardzo dobry wariant, bo:
+
+- masz wlasny adapter,
+- mozesz sam ustawic tekst w wierszu,
+- ale nie tworzysz osobnego pliku `item_hormon.xml`.
+
+To jest praktycznie styl podobny do `lek16_oceny`.
+
+### 7.1 Klasa `Hormone`
+
+Mozesz zostawic taka sama klase jak w wersji z `toString()`:
+
+```java
+package com.example.hormony;
+
+public class Hormone {
+    private String gruczol;
+    private String hormon;
+
+    public Hormone(String gruczol, String hormon) {
+        this.gruczol = gruczol;
+        this.hormon = hormon;
+    }
+
+    public String getGruczol() {
+        return gruczol;
+    }
+
+    public String getHormon() {
+        return hormon;
+    }
+}
+```
+
+Tutaj `toString()` nie jest juz potrzebne, bo tekst ukladasz bezposrednio w adapterze.
+
+### 7.2 Adapter bez `item.xml`
+
+```java
+package com.example.hormony;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import java.util.List;
+
+public class HormoneSimpleAdapter extends ArrayAdapter<Hormone> {
+
+    public HormoneSimpleAdapter(Context context, List<Hormone> hormony) {
+        super(context, android.R.layout.simple_list_item_1, hormony);
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        if (convertView == null) {
+            convertView = LayoutInflater.from(getContext())
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+        }
+
+        Hormone hormon = getItem(position);
+        TextView textView = convertView.findViewById(android.R.id.text1);
+
+        textView.setText(hormon.getGruczol() + " -> " + hormon.getHormon());
+
+        return convertView;
+    }
+}
+```
+
+To jest adapter, ale bez dodatkowego layoutu `item_hormon.xml`.
+
+### 7.3 Jak wyglada `MainActivity`
+
+Na gorze klasy:
+
+```java
+private List<Hormone> listaHormonow = new ArrayList<>();
+private HormoneSimpleAdapter adapter;
+```
+
+Ustawienie listy:
+
+```java
+private void ustawListe() {
+    listaHormonow.add(new Hormone("Trzustka", "Insulina"));
+    listaHormonow.add(new Hormone("Tarczyca", "Tyroksyna"));
+    listaHormonow.add(new Hormone("Szyszynka", "Melatonina"));
+    listaHormonow.add(new Hormone("Jajniki", "Estrogen"));
+    listaHormonow.add(new Hormone("Nadnercza", "Adrenalina"));
+
+    adapter = new HormoneSimpleAdapter(this, listaHormonow);
+    listHormony.setAdapter(adapter);
+}
+```
+
+Klikniecie elementu:
+
+```java
+listHormony.setOnItemClickListener((parent, view, position, id) -> {
+    Hormone element = listaHormonow.get(position);
+    etHormon.setText(element.getHormon());
+    spinnerGruczol.setSelection(znajdzPozycjeGruczolu(element.getGruczol()));
+});
+```
+
+Long click:
+
+```java
+listHormony.setOnItemLongClickListener((parent, view, position, id) -> {
+    listaHormonow.remove(position);
+    adapter.notifyDataSetChanged();
+    Toast.makeText(this, "Usunieto element", Toast.LENGTH_SHORT).show();
+    return true;
+});
+```
+
+### 7.4 Jak wyglada rekord na liscie
+
+W tej wersji kazdy rekord bedzie po prostu jednym tekstem, np.:
+
+```txt
+Trzustka -> Insulina
+Tarczyca -> Tyroksyna
+Szyszynka -> Melatonina
+```
+
+### 7.5 Czym to sie rozni od wersji z `toString()`
+
+Wersja z `toString()`:
+
+- nie ma wlasnego adaptera,
+- uzywa zwyklego `ArrayAdapter`,
+- tekst skladasz w klasie modelu.
+
+Wersja z adapterem bez `item.xml`:
+
+- ma wlasny adapter,
+- nadal nie ma osobnego pliku item,
+- tekst skladasz w `getView()`.
+
+To daje Ci troche wiecej kontroli niz samo `toString()`.
+
+### 7.6 Kiedy warto wybrac ten wariant
+
+Ten wariant jest dobry, gdy:
+
+- nauczyciel chce, zeby byl adapter,
+- ale nie potrzebujesz rozbudowanego wygladu,
+- wystarczy jeden napis w wierszu,
+- chcesz cos podobnego do `GradeAdapter`.
+
+## 8. Co zapamietac z tego przykladu
 
 Masz teraz dwie poprawne wersje listy:
 
@@ -652,6 +809,8 @@ Masz teraz dwie poprawne wersje listy:
    `item_hormon.xml` + `HormoneAdapter.java`
 2. wersja prostsza:
    `toString()` + `ArrayAdapter`
+3. wersja posrednia:
+   wlasny adapter + `android.R.layout.simple_list_item_1`
 
 Obie sa poprawne.  
 Po prostu wybierasz te, ktora lepiej pasuje do zadania.
